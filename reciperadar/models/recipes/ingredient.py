@@ -33,10 +33,7 @@ class RecipeIngredient(Storable):
 
     @property
     def product_name(self):
-        if self.product_is_plural:
-            return self.product.plural
-        else:
-            return self.product.singular
+        return self.product.plural if self.product_is_plural else self.product.singular
 
     @staticmethod
     def from_doc(doc):

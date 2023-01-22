@@ -49,10 +49,7 @@ class Recipe(Storable, Searchable):
 
     @property
     def hidden(self):
-        for ingredient in self.ingredients:
-            if not ingredient.product.singular:
-                return True
-        return False
+        return any(not ingredient.product.singular for ingredient in self.ingredients)
 
     @staticmethod
     def from_doc(doc):

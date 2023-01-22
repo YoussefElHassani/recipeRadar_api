@@ -9,13 +9,14 @@ from reciperadar.search.ingredients import IngredientSearch
 
 def load_ingredient_synonyms():
     # Return cached synonyms if they are available and have not yet expired
-    if hasattr(app, "ingredient_synonyms"):
-        if datetime.utcnow() < app.ingredient_synonyms_loaded_at + timedelta(hours=1):
-            return app.ingredient_synonyms
+    if hasattr(
+        app, "ingredient_synonyms"
+    ) and datetime.utcnow() < app.ingredient_synonyms_loaded_at + timedelta(
+        hours=1
+    ):
+        return app.ingredient_synonyms
 
-    # Otherwise, attempt to update the synonym cache
-    synonyms = IngredientSearch().synonyms()
-    if synonyms:
+    if synonyms := IngredientSearch().synonyms():
         app.ingredient_synonyms = synonyms
         app.ingredient_synonyms_loaded_at = datetime.utcnow()
 
@@ -124,7 +125,7 @@ class RecipeSearch(QueryRepository):
         if not sort:
             sort = "relevance"
         # if no ingredients are specified, we may be able to short-cut sorting
-        if not any([x.positive for x in ingredients]) and sort != "duration":
+        if not any(x.positive for x in ingredients) and sort != "duration":
             return {"script": "doc.rating.value", "order": "desc"}
         return self.sort_methods()[sort]
 
@@ -265,8 +266,7 @@ class RecipeSearch(QueryRepository):
             )
             yield query, sort_method, None
 
-        positive_ingredients = sum([x.positive for x in ingredients])
-        if positive_ingredients:
+        if positive_ingredients := sum(x.positive for x in ingredients):
             for min_include_match in range(positive_ingredients, 1, -1):
                 for exact_match in [False]:
                     query, sort_method = self._render_query(
@@ -468,18 +468,17 @@ class RecipeSearch(QueryRepository):
             products.sort(key=lambda x: abs(x["doc_count"] - (total / 2)))
             prefilter["products"] = {"buckets": products[:10]}
 
-        facets = {}
-        for field, content in results["aggregations"]["prefilter"].items():
-            if not isinstance(content, dict) or "buckets" not in content:
-                continue
-            facets[field] = [
+        facets = {
+            field: [
                 {
                     "key": bucket["key"],
                     "count": min(bucket["doc_count"], 100),
                 }
                 for bucket in content["buckets"]
             ]
-
+            for field, content in results["aggregations"]["prefilter"].items()
+            if isinstance(content, dict) and "buckets" in content
+        }
         return {
             "authority": "api",
             "total": min(results["hits"]["total"]["value"], 25 * limit),
