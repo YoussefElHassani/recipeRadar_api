@@ -13,7 +13,7 @@ def test_recipe_from_doc(raw_recipe_hit):
     expected_contents = ["one", "content-of-one", "ancestor-of-one"]
     actual_contents = recipe.ingredients[0].product.contents
 
-    assert all([content in actual_contents for content in expected_contents])
+    assert all(content in actual_contents for content in expected_contents)
 
     assert recipe.nutrition.carbohydrates == 0
     assert recipe.nutrition.fibre == 0.65
